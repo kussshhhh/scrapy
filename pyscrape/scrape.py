@@ -75,18 +75,16 @@ if ans:
 
 ans.sort() 
 
-median = ans[int((len(ans) - 1)/2)] 
+median = str(ans[int((len(ans) - 1)/2)] ) 
 
 conn = sqlite3.connect('median.db') 
 cursor = conn.cursor()
 
 today = datetime.date.today()
 
-cursor.execute("INSERT INTO daily_median_rents (date, median_rent) VALUES (?, ?)", (today, median))
-
-conn.commit()
-
-conn.close()
+f = open('scrapy/pyscrape/src/data.txt', 'a') ;
+f.write(median+"\n") ;
+f.close()
 
 
 

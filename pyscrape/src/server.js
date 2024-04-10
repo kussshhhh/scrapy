@@ -1,40 +1,59 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
+const cors = require('cors') ;
 
 const app = express();
-const port = 3000; // Adjust port number as needed
+app.use(cors()) ;
+const port = 3000; // You can change this port number
 
-const dbPath = 'median.db'; // Replace with your database path
+let rentData = [];
+let jsonData = [];
 
-async function getMedianData() {
-  return new Promise((resolve, reject) => {
-    const db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        // Implement logic to retrieve data from your table
-        db.all('SELECT * FROM your_table_name', (err, rows) => {
-          if (err) {
-            reject(err);
-          } else {
-            const jsonData = rows.map((row) => Object.fromEntries(row));
-            resolve(jsonData);
-          }
-          db.close();
-        });
-      }
-    });
-  });
-}
-
-app.get('/median-data', async (req, res) => {
-  try {
-    const data = await getMedianData();
-    res.json(data);
-  } catch (err) {
+// Read data from file on startup (optional, consider reading on demand for efficiency)
+fs.readFile('./data.txt', 'utf8', (err, data) => {
+  if (err) {
     console.error(err);
-    res.status(500).send('Error retrieving data');
+    return;
+  } else {
+    // Process the data here (same logic as before)
+    const lines = data.split(/\r?\n/);
+
+    for (let line of lines) {
+      if (line) {
+        rentData.push(parseInt(line));
+      }
+    }
+
+    let startDate = new Date(2024, 3, 6); // April 6, 2024 (year, month(0-indexed), day)
+
+    for (let i = 0; i < rentData.length; i++) {
+      // Format date in dd-mm-yyyy with leading zeros (manual approach)
+      const day = startDate.getDate().toString().padStart(2, '0'); // Pad day with leading zero
+      const month = (startDate.getMonth() + 1).toString().padStart(2, '0'); // Pad month with leading zero (add 1 for month index)
+      const year = startDate.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+    
+      jsonData.push({
+        date: formattedDate,
+        rent: rentData[i]
+      });
+    
+      startDate.setDate(startDate.getDate() + 1); // Increment date for next JSON object
+    }
+    
+
   }
 });
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+// API endpoint to get jsonData
+app.get('/api/rents', (req, res) => {
+  if (jsonData.length > 0) {
+    res.json(jsonData); // Send the jsonData array as JSON response
+  } else {
+    res.status(404).send('No rent data available'); // Handle case where data is not ready
+  }
+}); 
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
