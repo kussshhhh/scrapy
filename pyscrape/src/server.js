@@ -24,7 +24,7 @@ fs.readFile('./data.txt', 'utf8', (err, data) => {
       }
     }
 
-    let startDate = new Date(2024, 3, 6); // April 6, 2024 (year, month(0-indexed), day)
+    let startDate = new Date(2024, 3, 4); // April 6, 2024 (year, month(0-indexed), day)
 
     for (let i = 0; i < rentData.length; i++) {
       // Format date in dd-mm-yyyy with leading zeros (manual approach)
